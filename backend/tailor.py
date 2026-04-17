@@ -62,6 +62,32 @@ def _read_docx(path: str) -> Document:
     return Document(path)
 
 
+def _full_resume_text(doc: Document) -> str:
+    return "\n".join(p.text for p in doc.paragraphs)
+
+
+def ground_check_keywords(missing: list[str], full_resume_text: str) -> tuple[list[str], list[str]]:
+    """Partition missing_keywords into (groundable, ungroundable).
+
+    A keyword is groundable if it appears (case-insensitive, word-boundary-aware)
+    anywhere in the full resume text. Prevents Gemini from fabricating platform-
+    specific skills the candidate has never used just because the JD mentioned them.
+    """
+    groundable: list[str] = []
+    ungroundable: list[str] = []
+    haystack = full_resume_text.lower()
+    for kw in missing:
+        if len(kw) < 3:
+            ungroundable.append(kw)
+            continue
+        pattern = r"\b" + re.escape(kw.lower()) + r"\b"
+        if re.search(pattern, haystack):
+            groundable.append(kw)
+        else:
+            ungroundable.append(kw)
+    return groundable, ungroundable
+
+
 _LABELED_SKILL_RE = re.compile(r"^[A-Z][A-Za-z &/]+:\s")
 
 
@@ -202,21 +228,35 @@ def tailor_resume(
         log.warning("no skills section found in %s, returning base resume", base_path)
         return base_path
 
+    groundable, ungroundable = ground_check_keywords(missing_keywords, _full_resume_text(doc))
+    log.info("tailor: keyword grounding — %d kept, %d filtered", len(groundable), len(ungroundable))
+    log.debug("tailor: filtered (ungroundable) keywords: %s", ungroundable)
+
+    if not groundable:
+        log.info("tailor: no groundable keywords after filter, returning base resume unchanged")
+        return base_path
+
     prompt = (
         "You are a resume tailoring assistant. Your job is to subtly update the "
         "skills section of a resume so it better matches a job posting.\n\n"
         "RULES:\n"
         "- Only modify the skill keyword lines below.\n"
-        "- Incorporate the missing keywords where they fit naturally.\n"
-        "- Do NOT invent skills the candidate doesn't have — only reword, "
-        "reorder, or add keywords that are reasonable synonyms or related.\n"
+        "- For each missing keyword provided below: if it relates to an existing "
+        "skill already on a line, you may add it to that line. Otherwise omit it.\n"
+        "- Do NOT invent skills the candidate doesn't have. Reject any keyword "
+        "you cannot ground in the CURRENT SKILLS LINES above.\n"
+        "- Do NOT reference the hiring company's name or any proprietary "
+        "product/platform name from the job description.\n"
+        "- Do NOT add editorial phrases like \"relevant to X\" or \"experienced "
+        "with X-related systems\". Keep each line as a plain "
+        "\"Category: comma-separated-skills\" format.\n"
         "- Do NOT change job titles, company names, dates, or metrics.\n"
         "- Keep the same number of lines and similar line lengths.\n"
         "- Return ONLY a JSON object with key \"updated_skills_lines\" containing "
         "a list of strings, one per skill category line.\n\n"
         f"JOB DESCRIPTION:\n{description}\n\n"
         f"CURRENT SKILLS LINES:\n{json.dumps(current_skill_lines)}\n\n"
-        f"MISSING KEYWORDS TO INCORPORATE:\n{json.dumps(missing_keywords)}\n\n"
+        f"MISSING KEYWORDS TO INCORPORATE:\n{json.dumps(groundable)}\n\n"
         "Respond with only the JSON object, no markdown fences or extra text."
     )
 
