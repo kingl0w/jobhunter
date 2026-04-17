@@ -3,8 +3,9 @@ import logging
 import os
 from datetime import datetime
 
-import google.generativeai as genai
 from docx import Document
+from google import genai
+from google.genai import types
 from sqlalchemy.orm import Session
 
 from config import settings
@@ -17,13 +18,20 @@ MODEL = "gemini-2.0-flash"
 TAILORED_DIR = settings.tailored_resumes_dir
 os.makedirs(TAILORED_DIR, exist_ok=True)
 
-genai.configure(api_key=settings.gemini_api_key)
-client = genai.GenerativeModel(MODEL)
+_client: genai.Client | None = None
+
+
+def _get_client() -> genai.Client:
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=settings.gemini_api_key)
+    return _client
 
 
 def summarize_job(description: str) -> str:
-    response = client.generate_content(
-        (
+    response = _get_client().models.generate_content(
+        model=MODEL,
+        contents=(
             "Summarize this job posting in exactly 3 sentences and under 80 words. "
             "Sentence 1: what the role does day-to-day. "
             "Sentence 2: what tech stack and tools are required. "
@@ -31,7 +39,7 @@ def summarize_job(description: str) -> str:
             "Return only the summary, no preamble.\n\n"
             f"{description}"
         ),
-        generation_config={"max_output_tokens": 200},
+        config=types.GenerateContentConfig(max_output_tokens=200),
     )
     return response.text.strip()
 
@@ -157,9 +165,10 @@ def tailor_resume(
         "Respond with only the JSON object, no markdown fences or extra text."
     )
 
-    response = client.generate_content(
-        prompt,
-        generation_config={"max_output_tokens": 1024},
+    response = _get_client().models.generate_content(
+        model=MODEL,
+        contents=prompt,
+        config=types.GenerateContentConfig(max_output_tokens=1024),
     )
     raw_text = response.text.strip()
 
