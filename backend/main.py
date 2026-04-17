@@ -17,7 +17,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy import func
 from sqlalchemy.orm import Session, joinedload
 
@@ -74,13 +74,21 @@ async def lifespan(application: FastAPI):
 
 app = FastAPI(title="Job Hunter", version="0.2.0", lifespan=lifespan)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+
+# Ordering note: Starlette's add_middleware uses insert(0), so middleware added
+# later becomes the OUTER wrapper. For CORS headers to land on responses from
+# unhandled-exception fallbacks, CORSMiddleware must be added AFTER the catch
+# middleware so CORS is outermost and sees the fallback response on its way out.
+@app.middleware("http")
+async def catch_unhandled_exceptions(request: Request, call_next):
+    try:
+        return await call_next(request)
+    except Exception as exc:
+        log.exception("unhandled exception on %s %s", request.method, request.url.path)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "internal server error", "type": exc.__class__.__name__},
+        )
 
 
 @app.middleware("http")
@@ -90,6 +98,15 @@ async def log_requests(request: Request, call_next):
     elapsed_ms = (time.perf_counter() - start) * 1000
     log.info("%s %s %d %.0fms", request.method, request.url.path, response.status_code, elapsed_ms)
     return response
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 last_sync: dict = {"status": "never", "started_at": None, "finished_at": None, "result": None, "error": None}
