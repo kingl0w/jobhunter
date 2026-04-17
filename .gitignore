@@ -36,7 +36,7 @@ data/
 resumes/tailored/*.docx
 
 # Personal resumes (keep directory structure via .gitkeep)
-resumes/base_*.docx
+resumes/*.docx
 resumes/uploads/*
 !resumes/uploads/.gitkeep
 

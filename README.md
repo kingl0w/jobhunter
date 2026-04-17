@@ -14,12 +14,9 @@ Edit `.env` and add your Anthropic API key:
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Drop your two base resumes into the `resumes/` directory:
+### Resumes
 
-```
-resumes/base_it.docx
-resumes/base_dev.docx
-```
+No resumes are bundled with this repo. Place your own `.docx` resume files in the `resumes/` directory, then upload them via the Settings page at `http://localhost:3000/settings` once the app is running. Resume files are gitignored and stay local.
 
 ## Run
 
