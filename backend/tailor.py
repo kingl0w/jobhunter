@@ -14,7 +14,7 @@ from models import ResumeScore
 
 log = logging.getLogger(__name__)
 
-MODEL = "gemini-2.0-flash"
+MODEL = "gemini-2.5-flash"
 TAILORED_DIR = settings.tailored_resumes_dir
 os.makedirs(TAILORED_DIR, exist_ok=True)
 

@@ -34,6 +34,7 @@ from database import (
     update_application_status,
 )
 from fetcher import run_full_sync
+from google.genai import errors as genai_errors
 from models import (
     APPLICATION_STATUSES,
     ApplicationRead,
@@ -276,14 +277,24 @@ def tailor_job_resume(
     if not resume:
         raise HTTPException(404, "resume not found")
 
-    file_path = tailor_resume(
-        job_id=job.id,
-        description=job.description,
-        resume_id=resume_id,
-        db=db,
-    )
-
-    summary = summarize_job(job.description)
+    try:
+        file_path = tailor_resume(
+            job_id=job.id,
+            description=job.description,
+            resume_id=resume_id,
+            db=db,
+        )
+        summary = summarize_job(job.description)
+    except ValueError as exc:
+        if "API key" in str(exc):
+            raise HTTPException(503, "Gemini API key not configured; set GEMINI_API_KEY in backend/.env") from exc
+        raise
+    except genai_errors.ClientError as exc:
+        if exc.code == 429:
+            raise HTTPException(429, "Gemini API quota exceeded; check plan/billing at https://ai.dev/rate-limit") from exc
+        raise HTTPException(502, f"Gemini API error ({exc.code}): {exc.message}") from exc
+    except genai_errors.APIError as exc:
+        raise HTTPException(502, f"Gemini API error: {exc.message}") from exc
 
     score_row = (
         db.query(ResumeScore)
