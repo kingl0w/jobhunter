@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+
+# Node / Next.js
+node_modules/
+frontend/.next/
+frontend/out/
+
+# Environment
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.db
+*.sqlite3
+*.db.bak
+data/*.db*
+
+# Data
+data/
+
+# Tailored resumes (generated)
+resumes/tailored/*.docx
+
+# Personal resumes (keep directory structure via .gitkeep)
+resumes/base_*.docx
+resumes/uploads/*
+!resumes/uploads/.gitkeep
+
+# Claude Code local settings
+.claude/
+
+# WSL/NTFS metadata
+*:Zone.Identifier
+
+# Next.js build cache
+frontend/tsconfig.tsbuildinfo

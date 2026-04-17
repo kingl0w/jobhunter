@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-jobspy
+pandas
+sqlalchemy
+apscheduler
+google-generativeai
+python-docx
+pypdf
+python-multipart
+pydantic
+pydantic-settings
+python-dotenv
+httpx
