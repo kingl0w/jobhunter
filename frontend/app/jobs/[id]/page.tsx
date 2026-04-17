@@ -30,14 +30,14 @@ const STATUS_COLORS: Record<string, { bg: string; active: string }> = {
 };
 
 function scoreChipClass(score: number): string {
-  if (score > 60) return "bg-green-500/30 text-green-50 border-green-400/60";
-  if (score >= 40) return "bg-amber-500/30 text-amber-50 border-amber-400/60";
+  if (score > 45) return "bg-green-500/30 text-green-50 border-green-400/60";
+  if (score >= 30) return "bg-amber-500/30 text-amber-50 border-amber-400/60";
   return "bg-red-500/30 text-red-50 border-red-400/60";
 }
 
 function scoreTextColor(score: number): string {
-  if (score > 60) return "text-green-300";
-  if (score >= 40) return "text-amber-200";
+  if (score > 45) return "text-green-300";
+  if (score >= 30) return "text-amber-200";
   return "text-red-200";
 }
 
