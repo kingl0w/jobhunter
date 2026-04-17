@@ -1,6 +1,7 @@
 import json
 import logging
 import os
+import re
 from datetime import datetime
 
 from docx import Document
@@ -39,45 +40,99 @@ def summarize_job(description: str) -> str:
             "Return only the summary, no preamble.\n\n"
             f"{description}"
         ),
-        config=types.GenerateContentConfig(max_output_tokens=200),
+        config=types.GenerateContentConfig(
+            max_output_tokens=400,
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+        ),
     )
     return response.text.strip()
+
+
+def _strip_code_fences(text: str) -> str:
+    text = text.strip()
+    if text.startswith("```"):
+        parts = text.split("\n", 1)
+        text = parts[1] if len(parts) > 1 else text[3:]
+    if text.endswith("```"):
+        text = text[:-3]
+    return text.strip()
 
 
 def _read_docx(path: str) -> Document:
     return Document(path)
 
 
-def _extract_skills_section(doc: Document) -> tuple[int, int, list[str]]:
-    paragraphs = doc.paragraphs
-    start = None
-    end = None
+_LABELED_SKILL_RE = re.compile(r"^[A-Z][A-Za-z &/]+:\s")
 
+
+# TODO: only rewrites the skills section. A future pass could also tailor the
+# professional summary or specific experience bullets, but those require much
+# more careful prompting to avoid fabricating claims.
+def _extract_skills_section(doc: Document) -> tuple[int, int, list[str], str | None]:
+    """Return (start, end, skill_lines, pattern) where pattern is A/B/C or None."""
+    paragraphs = doc.paragraphs
+
+    # Pattern A: explicit "Skills" heading (or bold line) followed by content.
+    a_start = None
+    a_end = None
     for i, para in enumerate(paragraphs):
         text = para.text.strip().lower()
         is_heading = para.style.name.lower().startswith("heading")
-        is_bold_line = all(run.bold for run in para.runs if run.text.strip()) and para.runs
+        is_bold_line = bool(para.runs) and all(run.bold for run in para.runs if run.text.strip())
 
         if (is_heading or is_bold_line) and "skill" in text:
-            start = i + 1
+            a_start = i + 1
             continue
 
-        if start is not None and (is_heading or is_bold_line) and text:
-            end = i
+        if a_start is not None and (is_heading or is_bold_line) and text:
+            a_end = i
             break
 
-    if start is None:
-        return -1, -1, []
+    if a_start is not None:
+        if a_end is None:
+            a_end = len(paragraphs)
+        lines = [paragraphs[i].text for i in range(a_start, a_end) if paragraphs[i].text.strip()]
+        if lines:
+            log.info("skills section detected: pattern=A, paragraphs %d-%d", a_start, a_end - 1)
+            return a_start, a_end, lines, "A"
 
-    if end is None:
-        end = len(paragraphs)
+    # Pattern B: consecutive run of "Category: items, ..." paragraphs with no parent heading.
+    best_start = -1
+    best_end = -1
+    run_start = None
+    for i, para in enumerate(paragraphs):
+        if _LABELED_SKILL_RE.match(para.text):
+            if run_start is None:
+                run_start = i
+        else:
+            if run_start is not None and (i - run_start) >= 2 and (i - run_start) > (best_end - best_start):
+                best_start, best_end = run_start, i
+            run_start = None
+    if run_start is not None and (len(paragraphs) - run_start) >= 2 and (len(paragraphs) - run_start) > (best_end - best_start):
+        best_start, best_end = run_start, len(paragraphs)
 
-    skill_lines = [
-        paragraphs[i].text
-        for i in range(start, end)
-        if paragraphs[i].text.strip()
-    ]
-    return start, end, skill_lines
+    if best_start != -1:
+        lines = [paragraphs[i].text for i in range(best_start, best_end) if paragraphs[i].text.strip()]
+        log.info("skills section detected: pattern=B, paragraphs %d-%d", best_start, best_end - 1)
+        return best_start, best_end, lines, "B"
+
+    # Pattern C: a single flat comma-list paragraph near the top, before the first heading.
+    first_heading = None
+    for i, para in enumerate(paragraphs):
+        if para.style.name.lower().startswith("heading") and para.text.strip():
+            first_heading = i
+            break
+    scan_end = first_heading if first_heading is not None else min(len(paragraphs), 15)
+    for i in range(2, scan_end):
+        text = paragraphs[i].text.strip()
+        if not text:
+            continue
+        tokens = [t.strip() for t in text.split(",") if t.strip()]
+        if len(tokens) >= 3 and sum(len(t) for t in tokens) / len(tokens) < 30:
+            log.info("skills section detected: pattern=C, paragraph %d", i)
+            return i, i + 1, [text], "C"
+
+    return -1, -1, [], None
 
 
 def _replace_skills_section(doc: Document, start: int, end: int, new_lines: list[str]) -> Document:
@@ -141,7 +196,7 @@ def tailor_resume(
     missing_keywords = (score_row.missing_keywords if score_row else []) or []
 
     doc = _read_docx(base_path)
-    start, end, current_skill_lines = _extract_skills_section(doc)
+    start, end, current_skill_lines, _pattern = _extract_skills_section(doc)
 
     if start == -1 or not current_skill_lines:
         log.warning("no skills section found in %s, returning base resume", base_path)
@@ -168,9 +223,12 @@ def tailor_resume(
     response = _get_client().models.generate_content(
         model=MODEL,
         contents=prompt,
-        config=types.GenerateContentConfig(max_output_tokens=1024),
+        config=types.GenerateContentConfig(
+            max_output_tokens=4096,
+            thinking_config=types.ThinkingConfig(thinking_budget=0),
+        ),
     )
-    raw_text = response.text.strip()
+    raw_text = _strip_code_fences(response.text.strip())
 
     try:
         parsed = json.loads(raw_text)
