@@ -289,12 +289,12 @@ def tailor_resume(
     # TODO: char-budget is a heuristic proxy for page count. A more robust check
     # would render via `libreoffice --headless --convert-to pdf` and count pages.
     # Out of scope here — keep this cheap and deterministic for now.
-    max_growth = 1.15
     for i, (src, new) in enumerate(zip(source_lengths, updated_lines)):
-        if len(new) > src * max_growth:
+        budget = max(int(src * 1.15), src + 15)
+        if len(new) > budget:
             log.warning(
                 "tailor: line %d exceeds length budget (%d > %d), reverting to source",
-                i, len(new), int(src * max_growth),
+                i, len(new), budget,
             )
             updated_lines[i] = current_skill_lines[i]
 
