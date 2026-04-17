@@ -236,6 +236,8 @@ def tailor_resume(
         log.info("tailor: no groundable keywords after filter, returning base resume unchanged")
         return base_path
 
+    source_lengths = [len(line) for line in current_skill_lines]
+
     prompt = (
         "You are a resume tailoring assistant. Your job is to subtly update the "
         "skills section of a resume so it better matches a job posting.\n\n"
@@ -252,6 +254,9 @@ def tailor_resume(
         "\"Category: comma-separated-skills\" format.\n"
         "- Do NOT change job titles, company names, dates, or metrics.\n"
         "- Keep the same number of lines and similar line lengths.\n"
+        "- Each rewritten line MUST be no longer than the corresponding source "
+        "line + ~15% characters. Prefer removing less-relevant items over "
+        "adding new ones to stay within this budget.\n"
         "- Return ONLY a JSON object with key \"updated_skills_lines\" containing "
         "a list of strings, one per skill category line.\n\n"
         f"JOB DESCRIPTION:\n{description}\n\n"
@@ -280,6 +285,18 @@ def tailor_resume(
     if not isinstance(updated_lines, list) or not all(isinstance(s, str) for s in updated_lines):
         log.error("unexpected response shape: %s", type(updated_lines))
         return base_path
+
+    # TODO: char-budget is a heuristic proxy for page count. A more robust check
+    # would render via `libreoffice --headless --convert-to pdf` and count pages.
+    # Out of scope here — keep this cheap and deterministic for now.
+    max_growth = 1.15
+    for i, (src, new) in enumerate(zip(source_lengths, updated_lines)):
+        if len(new) > src * max_growth:
+            log.warning(
+                "tailor: line %d exceeds length budget (%d > %d), reverting to source",
+                i, len(new), int(src * max_growth),
+            )
+            updated_lines[i] = current_skill_lines[i]
 
     tailored_doc = _read_docx(base_path)
     _replace_skills_section(tailored_doc, start, end, updated_lines)
