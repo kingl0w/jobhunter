@@ -1,6 +1,6 @@
 # jobhunter
 
-Fetches remote job postings from multiple boards, scores them against your resumes, and generates tailored resumes for the best matches. Built with FastAPI, Next.js, and Claude.
+Fetches remote job postings from multiple boards, scores them against your resumes, and generates tailored resumes for the best matches. Built with FastAPI, and Next.js
 
 ## Setup
 
