@@ -8,7 +8,7 @@ Fetches remote job postings from multiple boards, scores them against your resum
 cp .env.example .env
 ```
 
-Edit `.env` and add your Anthropic API key:
+Edit `.env` and add your AI API key:
 
 ```
 ANTHROPIC_API_KEY=sk-ant-...
