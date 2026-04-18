@@ -75,10 +75,7 @@ async def lifespan(application: FastAPI):
 app = FastAPI(title="Job Hunter", version="0.2.0", lifespan=lifespan)
 
 
-# Ordering note: Starlette's add_middleware uses insert(0), so middleware added
-# later becomes the OUTER wrapper. For CORS headers to land on responses from
-# unhandled-exception fallbacks, CORSMiddleware must be added AFTER the catch
-# middleware so CORS is outermost and sees the fallback response on its way out.
+#cors must be added after catch_unhandled_exceptions so cors wraps the 500 fallback (starlette add_middleware inserts at 0, so later = outer).
 @app.middleware("http")
 async def catch_unhandled_exceptions(request: Request, call_next):
     try:

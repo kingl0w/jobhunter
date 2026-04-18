@@ -46,7 +46,7 @@ function JobRow({ job }: { job: Job }) {
   const topMissing = bestScore?.missing_keywords ?? [];
   return (
     <div className="flex items-start gap-6 py-4 px-3 border-b-2 border-strong hover:bg-surface-raised/60 transition-colors">
-      {/* left: title + meta + badges */}
+      {/*left: title + meta + badges*/}
       <div className="flex-1 min-w-0">
         <Link
           href={`/jobs/${job.id}`}
@@ -86,7 +86,7 @@ function JobRow({ job }: { job: Job }) {
         </div>
       </div>
 
-      {/* center: keywords */}
+      {/*center: keywords*/}
       {bestScore && (
         <div className="hidden lg:flex flex-1 min-w-0 flex-wrap content-start gap-1 max-h-[56px] overflow-hidden">
           {topMatched.slice(0, 4).map((kw) => (
@@ -108,7 +108,7 @@ function JobRow({ job }: { job: Job }) {
         </div>
       )}
 
-      {/* right: scores + actions */}
+      {/*right: scores + actions*/}
       <div className="w-[200px] flex-shrink-0 flex flex-col items-end gap-2">
         {scores.length > 0 && (
           <div className="flex flex-wrap gap-1.5 justify-end">

@@ -14,11 +14,7 @@ from models import Job
 
 log = logging.getLogger(__name__)
 
-# Google requires specific DOM conditions (cursor element, JS-rendered jobs widget)
-# that are unreliable and frequently return zero results. ZipRecruiter requires
-# residential proxies to return results — datacenter IPs are silently blocked.
-# Both are excluded from production scraping but kept in ALL_SITES for debugging
-# via test_sources().
+#google (flaky dom scraping) and zip_recruiter (silently blocks datacenter ips) are excluded from production; kept in all_sites for test_sources().
 FULL_SITES = ["indeed", "linkedin"]
 ALL_SITES = ["indeed", "linkedin", "zip_recruiter", "google"]
 

@@ -91,14 +91,11 @@ def ground_check_keywords(missing: list[str], full_resume_text: str) -> tuple[li
 _LABELED_SKILL_RE = re.compile(r"^[A-Z][A-Za-z &/]+:\s")
 
 
-# TODO: only rewrites the skills section. A future pass could also tailor the
-# professional summary or specific experience bullets, but those require much
-# more careful prompting to avoid fabricating claims.
 def _extract_skills_section(doc: Document) -> tuple[int, int, list[str], str | None]:
     """Return (start, end, skill_lines, pattern) where pattern is A/B/C or None."""
     paragraphs = doc.paragraphs
 
-    # Pattern A: explicit "Skills" heading (or bold line) followed by content.
+    #pattern a: explicit "skills" heading (or bold line) followed by content.
     a_start = None
     a_end = None
     for i, para in enumerate(paragraphs):
@@ -122,7 +119,7 @@ def _extract_skills_section(doc: Document) -> tuple[int, int, list[str], str | N
             log.info("skills section detected: pattern=A, paragraphs %d-%d", a_start, a_end - 1)
             return a_start, a_end, lines, "A"
 
-    # Pattern B: consecutive run of "Category: items, ..." paragraphs with no parent heading.
+    #pattern b: consecutive run of "category: items, ..." paragraphs with no parent heading.
     best_start = -1
     best_end = -1
     run_start = None
@@ -142,7 +139,7 @@ def _extract_skills_section(doc: Document) -> tuple[int, int, list[str], str | N
         log.info("skills section detected: pattern=B, paragraphs %d-%d", best_start, best_end - 1)
         return best_start, best_end, lines, "B"
 
-    # Pattern C: a single flat comma-list paragraph near the top, before the first heading.
+    #pattern c: a single flat comma-list paragraph near the top, before the first heading.
     first_heading = None
     for i, para in enumerate(paragraphs):
         if para.style.name.lower().startswith("heading") and para.text.strip():
@@ -286,9 +283,6 @@ def tailor_resume(
         log.error("unexpected response shape: %s", type(updated_lines))
         return base_path
 
-    # TODO: char-budget is a heuristic proxy for page count. A more robust check
-    # would render via `libreoffice --headless --convert-to pdf` and count pages.
-    # Out of scope here — keep this cheap and deterministic for now.
     for i, (src, new) in enumerate(zip(source_lengths, updated_lines)):
         budget = max(int(src * 1.15), src + 15)
         if len(new) > budget:

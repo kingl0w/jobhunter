@@ -209,7 +209,7 @@ export default function JobDetail() {
         </Link>
       </nav>
 
-      {/* header */}
+      {/*header*/}
       <header className="pb-6 border-b border-subtle">
         <h1 className="font-display text-3xl font-bold text-primary">{job.title}</h1>
         <p className="text-secondary mt-1 font-display">
@@ -304,7 +304,7 @@ export default function JobDetail() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* main */}
+        {/*main*/}
         <div className="lg:col-span-2">
           {scores.length > 0 && (
             <section className="py-6 border-b border-subtle">
@@ -382,7 +382,7 @@ export default function JobDetail() {
           )}
         </div>
 
-        {/* sidebar */}
+        {/*sidebar*/}
         <aside className="lg:border-l lg:border-subtle lg:pl-8">
           <section className="py-6 border-b border-subtle">
             <h2 className="font-display text-xs font-semibold text-muted mb-3 uppercase tracking-widest">

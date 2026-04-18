@@ -156,7 +156,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Resumes Section */}
+      {/*resumes section*/}
       <section className="mb-10 pb-8 border-b border-subtle">
         <h2 className="font-display text-lg font-semibold text-primary mb-1">
           Resumes
@@ -235,7 +235,7 @@ export default function SettingsPage() {
         )}
       </section>
 
-      {/* Search Terms Section */}
+      {/*search terms section*/}
       <section>
         <h2 className="font-display text-lg font-semibold text-primary mb-1">
           Search Terms
