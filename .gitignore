@@ -1,3 +1,7 @@
+# Argos
+argos/.initialized
+.argos/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -6,45 +10,38 @@ dist/
 build/
 venv/
 .venv/
-
 # Node / Next.js
 node_modules/
 frontend/.next/
 frontend/out/
-
 # Environment
 .env
-
 # IDE
 .vscode/
 .idea/
-
 # OS
 .DS_Store
 Thumbs.db
-
 # Database
 *.db
 *.sqlite3
 *.db.bak
 data/*.db*
-
 # Data
 data/
-
 # Tailored resumes (generated)
 resumes/tailored/*.docx
-
 # Personal resumes (keep directory structure via .gitkeep)
 resumes/*.docx
 resumes/uploads/*
 !resumes/uploads/.gitkeep
-
-# Claude Code local settings
-.claude/
-
+# Claude Code — agents and commands are Argos-managed and MUST be committed
+# Only ignore personal/runtime files inside .claude/
+!.claude/agents/
+!.claude/commands/
+.claude/settings.local.json
+.claude/*.log
 # WSL/NTFS metadata
 *:Zone.Identifier
-
 # Next.js build cache
 frontend/tsconfig.tsbuildinfo
