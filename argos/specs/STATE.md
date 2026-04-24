@@ -13,7 +13,7 @@ _One sentence. What is the single most important thing in flight right now? If y
 
 Tickets ready to be worked, in rough priority order. The planner picks the top one on `/next` unless told otherwise.
 
-- _none yet — use `/new-ticket` to add one_
+- _none_
 
 ## In progress
 
@@ -25,7 +25,7 @@ Tickets currently being executed by the loop or paused mid-cycle. At most one pe
 
 Tickets completed since the last cycle close. Cleared when you close a cycle (weekly, by default). Append-only within a cycle.
 
-- _none yet_
+- 2026-04-24 — [JH-001](tickets/JH-001-readme-gemini-api-key.md) — Fix README API key drift: ANTHROPIC_API_KEY → GEMINI_API_KEY (P3)
 
 ## Open decisions
 
