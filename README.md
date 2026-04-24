@@ -11,7 +11,7 @@ cp .env.example .env
 Edit `.env` and add your AI API key:
 
 ```
-ANTHROPIC_API_KEY=sk-ant-...
+GEMINI_API_KEY=...
 ```
 
 ### Resumes
