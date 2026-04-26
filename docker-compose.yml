@@ -8,5 +8,3 @@ services:
     volumes:
       - ./resumes:/app/resumes
       - ./data:/app/data
-    environment:
-      - DATABASE_URL=sqlite:///./data/jobhunter.db
