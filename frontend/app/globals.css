@@ -15,6 +15,59 @@
   --color-border-subtle: #52525b;
 }
 
+:root {
+  /* editorial redesign tokens — JH-007. Coexist with --color-* until Phase 2 cleanup. */
+  --bg:           #16140f;
+  --bg-tile:      transparent;
+  --surface:      #1f1c16;
+  --surface-2:    #28241c;
+  --inset:        #14110b;
+  --border:       #34302a;
+  --border-2:     #4a4438;
+  --rule:         #6b6555;
+
+  --text:         #f4ecdb;
+  --muted:        #b9ad94;
+  --dim:          #847a64;
+
+  --accent:       #c79a3e;
+  --accent-dim:   #9a7528;
+  --accent-glow:  #e6b85b;
+  --accent-15:    rgba(199, 154, 62, 0.13);
+  --accent-30:    rgba(199, 154, 62, 0.32);
+  --on-accent:    #1a140a;
+
+  --green:        #6dbf6e;
+  --red:          #d83a2b;
+  --yellow:       #e3b341;
+  --orange:       #e08a3c;
+  --tint-green:   rgba(109, 191, 110, 0.12);
+  --tint-red:     rgba(216, 58, 43, 0.12);
+  --tint-yellow:  rgba(227, 179, 65, 0.12);
+  --tint-orange:  rgba(224, 138, 60, 0.12);
+
+  --hairline:        1px solid var(--border);
+  --hairline-rule:   1px solid var(--rule);
+  --hairline-accent: 1px solid var(--accent-30);
+
+  --font-serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+  --font-mono-stack:  "Geist Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --font-sans:  "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: 2px;
+  --radius:    3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --radius-xl: 10px;
+
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 280ms;
+
+  --row-pad-y: 14px;
+  --card-pad:  22px;
+}
+
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -24,6 +77,15 @@ body {
   color: var(--color-text-primary);
   background: var(--color-bg);
   font-family: var(--font-body), system-ui, sans-serif;
+}
+
+body {
+  font-variant-numeric: tabular-nums oldstyle-nums;
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
+    radial-gradient(rgba(255, 255, 255, 0.008) 1px, transparent 1px);
+  background-size: 3px 3px, 7px 7px;
+  background-position: 0 0, 1px 2px;
 }
 
 h1, h2, h3, h4, h5, h6 {

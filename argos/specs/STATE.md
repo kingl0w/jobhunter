@@ -25,6 +25,7 @@ Tickets currently being executed by the loop or paused mid-cycle. At most one pe
 
 Tickets completed since the last cycle close. Cleared when you close a cycle (weekly, by default). Append-only within a cycle.
 
+- 2026-04-26 — [JH-007](tickets/JH-007-design-tokens-and-fonts.md) — Design tokens + fonts foundation (P3)
 - 2026-04-26 — [JH-006](tickets/JH-006-phase-1-closeout-drift-reconciliation.md) — Phase 1 closeout — reconcile resolved drift entries in ARCHITECTURE and PRD (P3)
 - 2026-04-26 — [JH-005](tickets/JH-005-readme-scoring-drift.md) — Fix README scoring drift — clarify keyword matching, not LLM (P3)
 - 2026-04-26 — [JH-004](tickets/JH-004-remove-unsupported-source-filters.md) — Remove zip_recruiter and google from frontend source filter (P3)
@@ -42,4 +43,4 @@ Product or architecture calls that are pending and block one or more queued tick
 
 Places the code and `argos/specs/ARCHITECTURE.md` disagree. Each entry should name the file or module, one sentence on the mismatch, and a disposition (fix code, update docs, file ADR).
 
-- _none_
+- `frontend/app/settings/page.tsx:277` — `useExampleTerm` is invoked inside an `onClick` callback, violating `react-hooks/rules-of-hooks`. `next build` fails the post-compile lint step on `main`. Disposition: fix code in a follow-up ticket (likely rename to `handleExampleTerm` or move the hook call to the component body). Surfaced by JH-007 verification.
