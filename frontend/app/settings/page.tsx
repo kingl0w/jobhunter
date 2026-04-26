@@ -131,7 +131,7 @@ export default function SettingsPage() {
     }
   };
 
-  const useExampleTerm = (example: string) => {
+  const applyExampleTerm = (example: string) => {
     setNewTerm(example);
   };
 
@@ -274,7 +274,7 @@ export default function SettingsPage() {
                 <button
                   key={ex}
                   type="button"
-                  onClick={() => useExampleTerm(ex)}
+                  onClick={() => applyExampleTerm(ex)}
                   className="text-xs px-3 py-1.5 rounded bg-surface-raised text-secondary hover:text-primary border border-subtle transition-colors"
                 >
                   + {ex}
