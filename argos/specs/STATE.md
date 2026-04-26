@@ -1,6 +1,6 @@
 # jobhunter — State
 
-**Last updated:** 2026-04-24
+**Last updated:** 2026-04-26
 **Updated by:** _verifier (automated) or human (on hotfix)_
 
 This file is the project's short-term memory. Every subagent reads it first. Only the verifier writes it during the loop; humans write it on out-of-loop edits.
@@ -25,6 +25,7 @@ Tickets currently being executed by the loop or paused mid-cycle. At most one pe
 
 Tickets completed since the last cycle close. Cleared when you close a cycle (weekly, by default). Append-only within a cycle.
 
+- 2026-04-26 — [JH-002](tickets/JH-002-remove-dead-database-url.md) — Remove dead DATABASE_URL from docker-compose.yml (P3)
 - 2026-04-24 — [JH-001](tickets/JH-001-readme-gemini-api-key.md) — Fix README API key drift: ANTHROPIC_API_KEY → GEMINI_API_KEY (P3)
 
 ## Open decisions
