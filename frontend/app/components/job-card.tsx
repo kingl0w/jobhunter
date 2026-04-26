@@ -13,8 +13,6 @@ function scoreChipClass(score: number): string {
 const SITE_COLORS: Record<string, string> = {
   indeed: "bg-indigo-500/20 text-indigo-200",
   linkedin: "bg-sky-500/20 text-sky-200",
-  zip_recruiter: "bg-green-500/20 text-green-200",
-  google: "bg-orange-500/20 text-orange-200",
 };
 
 const STATUS_COLORS: Record<string, string> = {

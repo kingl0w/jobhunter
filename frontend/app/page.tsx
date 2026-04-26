@@ -49,7 +49,7 @@ export default function Home() {
   const [minScore, setMinScore] = useState(0);
   const [remoteOnly, setRemoteOnly] = useState(false);
   const [sortBy, setSortBy] = useState<"date" | "score" | "company">("date");
-  const [source, setSource] = useState<"all" | "indeed" | "linkedin" | "zip_recruiter" | "google">("all");
+  const [source, setSource] = useState<"all" | "indeed" | "linkedin">("all");
   const [resumeFilter, setResumeFilter] = useState<string>("all");
   const [datePosted, setDatePosted] = useState<"any" | "24h" | "3d" | "week">("any");
   const [hasSalary, setHasSalary] = useState(false);
@@ -290,8 +290,6 @@ export default function Home() {
             <option value="all">All Sources</option>
             <option value="indeed">Indeed</option>
             <option value="linkedin">LinkedIn</option>
-            <option value="zip_recruiter">ZipRecruiter</option>
-            <option value="google">Google</option>
           </select>
 
           <select
