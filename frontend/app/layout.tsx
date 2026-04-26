@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { fraunces, inter, jetbrainsMono } from "./lib/fonts";
 import Topnav from "./components/topnav";
+import { ToastStack } from "./components/toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function RootLayout({
       >
         <Topnav />
         {children}
+        <ToastStack />
       </body>
     </html>
   );
