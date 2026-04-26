@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchSyncStatus, triggerSync } from "../api";
 import type { SyncStatus } from "../types";
+import Icon from "./icon-svg";
 
 function fmtRelative(iso: string | null): string {
   if (!iso) return "never";
@@ -14,15 +15,6 @@ function fmtRelative(iso: string | null): string {
   if (d === 1) return "1d ago";
   if (d < 30) return `${d}d ago`;
   return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function RefreshIcon({ size = 14 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d="M14 8a6 6 0 1 1-1.76-4.24" />
-      <path d="M14 2v3.5h-3.5" strokeLinecap="round" />
-    </svg>
-  );
 }
 
 export default function Topnav() {
@@ -144,7 +136,7 @@ export default function Topnav() {
             disabled={running}
             className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-ed-md bg-ed-surface text-ed-text border border-ed-border text-[12px] font-medium hover:bg-ed-surface-2 hover:border-ed-border-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-ed-fast"
           >
-            <RefreshIcon />
+            <Icon name="refresh" />
             {running ? "syncing" : "sync"}
           </button>
         </div>
