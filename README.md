@@ -1,6 +1,6 @@
 # jobhunter
 
-Fetches remote job postings from multiple boards, scores them against your resumes, and generates tailored resumes for the best matches. Built with FastAPI, and Next.js
+Fetches remote job postings from multiple boards, scores them against your resumes via keyword and synonym matching, and generates tailored resumes for the best matches using Gemini. Built with FastAPI, and Next.js
 
 ## Setup
 
@@ -8,7 +8,7 @@ Fetches remote job postings from multiple boards, scores them against your resum
 cp .env.example .env
 ```
 
-Edit `.env` and add your AI API key:
+Edit `.env` and add your Gemini API key (used for resume tailoring and job summarization — scoring runs locally without an LLM):
 
 ```
 GEMINI_API_KEY=...
