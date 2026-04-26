@@ -121,9 +121,4 @@ Violating any of these requires an ADR.
 
 Code-vs-docs and code-vs-code mismatches observed in this pass. Each should become an ADR or a cleanup ticket.
 
-- **README vs env.** `README.md` instructs `ANTHROPIC_API_KEY=sk-ant-...`. The actual code (`backend/config.py`, `backend/tailor.py`) reads `GEMINI_API_KEY` via `google-genai`, and `.env.example` agrees. The README is stale.
-- **docker-compose vs config.** `docker-compose.yml` sets `DATABASE_URL=sqlite:///./data/jobhunter.db`. `backend/config.py` hardcodes `db_path="data/jobs.db"` and does not read `DATABASE_URL`. The env var is dead, and the filenames don't even match.
-- **README scoring claim.** README implies scoring is part of the "AI" flow (single `ANTHROPIC_API_KEY` suggests LLM everywhere). Code reality: `backend/scorer.py` is regex + `SYNONYM_MAP`; only `tailor.py` calls the LLM.
-- **Dead env vars.** `.env.example` lists `IT_RESUME_PATH` and `DEV_RESUME_PATH`. `backend/config.py` defines no corresponding settings — leftovers from the pre-multi-resume schema (see `backend/migrate.py` docstring).
-- **Frontend source filter vs scraper.** `frontend/app/page.tsx` exposes a source filter with `zip_recruiter` and `google` options; `backend/fetcher.py` scrapes only `FULL_SITES = ["indeed", "linkedin"]` in production. The UI offers filters for sources that produce no data.
 - **docker-compose does not build the frontend.** Only `./backend` is a service. `frontend/` has no Dockerfile. README's "Run" section treats this as intentional (two separate commands), but it means there is no one-command production start.

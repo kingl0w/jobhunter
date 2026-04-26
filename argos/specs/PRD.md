@@ -62,4 +62,3 @@ Ranked by priority:
 
 - Intended deploy target is a home server ("hserver-1" — see Success metrics). The repo does not yet contain deployment artifacts for it; current docker-compose assumes the operator runs it interactively on localhost.
 - The codebase shows evidence of a prior "IT / Dev resume" schema (see `backend/migrate.py` docstring, and dead `IT_RESUME_PATH` / `DEV_RESUME_PATH` entries in `.env.example`). The current schema is generic multi-resume; any references to two hardcoded resume slots are historical.
-- Known doc drift (flagged in more detail in `ARCHITECTURE.md` → Known drift): README names `ANTHROPIC_API_KEY` but the code reads `GEMINI_API_KEY`; `docker-compose.yml` sets `DATABASE_URL` but `config.py` ignores it.
