@@ -25,6 +25,7 @@ Tickets currently being executed by the loop or paused mid-cycle. At most one pe
 
 Tickets completed since the last cycle close. Cleared when you close a cycle (weekly, by default). Append-only within a cycle.
 
+- 2026-04-26 — [JH-009](tickets/JH-009-topnav-masthead.md) — Topnav masthead component (P3)
 - 2026-04-26 — [JH-008](tickets/JH-008-fix-rules-of-hooks-settings.md) — Fix rule-of-hooks violation in settings/page.tsx (P2)
 - 2026-04-26 — [JH-007](tickets/JH-007-design-tokens-and-fonts.md) — Design tokens + fonts foundation (P3)
 - 2026-04-26 — [JH-006](tickets/JH-006-phase-1-closeout-drift-reconciliation.md) — Phase 1 closeout — reconcile resolved drift entries in ARCHITECTURE and PRD (P3)
@@ -44,4 +45,4 @@ Product or architecture calls that are pending and block one or more queued tick
 
 Places the code and `argos/specs/ARCHITECTURE.md` disagree. Each entry should name the file or module, one sentence on the mismatch, and a disposition (fix code, update docs, file ADR).
 
-- _none_
+- `frontend/app/page.tsx:195-229` renders a duplicate `<header>` that now stacks below the global Topnav on `/`. Transient phase state — accepted during JH-009 planning, removed when JH-011 rebuilds the jobs list. Disposition: fix code (in JH-011), no ADR needed.
