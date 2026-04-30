@@ -75,6 +75,17 @@ export interface TailorResponse {
   summary: string;
 }
 
+export interface User {
+  id: string;
+  username: string;
+  is_demo: boolean;
+}
+
+export interface Quota {
+  tailor: { used: number; limit: number };
+  summarize: { used: number; limit: number };
+}
+
 export const APPLICATION_STATUSES = [
   "saved",
   "applied",

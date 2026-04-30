@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { fraunces, inter, jetbrainsMono } from "./lib/fonts";
+import { AuthProvider } from "./components/auth-context";
+import AuthGate from "./components/auth-gate";
 import Topnav from "./components/topnav";
 import { ToastStack } from "./components/toast";
 import "./globals.css";
@@ -19,9 +21,11 @@ export default function RootLayout({
       <body
         className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
-        <Topnav />
-        {children}
-        <ToastStack />
+        <AuthProvider>
+          <Topnav />
+          <AuthGate>{children}</AuthGate>
+          <ToastStack />
+        </AuthProvider>
       </body>
     </html>
   );

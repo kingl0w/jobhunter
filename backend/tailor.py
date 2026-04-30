@@ -196,9 +196,10 @@ def tailor_resume(
     job_id: str,
     description: str,
     resume_id: str,
+    user_id: str,
     db: Session,
 ) -> str:
-    resume = get_resume(db, resume_id)
+    resume = get_resume(db, resume_id, user_id=user_id)
     if not resume:
         raise ValueError(f"resume not found: {resume_id}")
 
@@ -304,6 +305,6 @@ def tailor_resume(
 
     log.info("tailored resume saved: %s", output_path)
 
-    update_application_status(db, job_id, resume_used=output_path)
+    update_application_status(db, job_id, user_id, resume_used=output_path)
 
     return output_path

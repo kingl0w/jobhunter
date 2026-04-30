@@ -12,3 +12,6 @@ pydantic
 pydantic-settings
 python-dotenv
 httpx
+itsdangerous
+pytest
+httpx-sse

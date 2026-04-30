@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { fetchSyncStatus, triggerSync } from "../api";
+import { AuthError, fetchSyncStatus, triggerSync } from "../api";
 import type { SyncStatus } from "../types";
+import { useAuth } from "./auth-context";
 import Icon from "./icon-svg";
 
 function fmtRelative(iso: string | null): string {
@@ -19,6 +20,7 @@ function fmtRelative(iso: string | null): string {
 
 export default function Topnav() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -43,6 +45,11 @@ export default function Topnav() {
   }, [stopPoll]);
 
   useEffect(() => {
+    if (!user) {
+      setStatus(null);
+      stopPoll();
+      return;
+    }
     let cancelled = false;
     fetchSyncStatus()
       .then((s) => {
@@ -55,7 +62,7 @@ export default function Topnav() {
       cancelled = true;
       stopPoll();
     };
-  }, [startPoll, stopPoll]);
+  }, [user, startPoll, stopPoll]);
 
   const onSync = async () => {
     if (status?.status === "running") return;
@@ -64,8 +71,10 @@ export default function Topnav() {
       const s = await fetchSyncStatus();
       setStatus(s);
       startPoll();
-    } catch {
-      // swallow — keep masthead non-fatal
+    } catch (e) {
+      if (e instanceof AuthError) {
+        // auth-context will redirect to /login on next render via 401
+      }
     }
   };
 
@@ -80,6 +89,8 @@ export default function Topnav() {
   const lastSyncLabel = running
     ? "syncing…"
     : `last sync ${fmtRelative(status?.finished_at ?? null)}`;
+
+  if (pathname === "/login") return null;
 
   const isJobs = pathname === "/" || pathname.startsWith("/jobs");
   const isPipeline = pathname.startsWith("/pipeline");
@@ -122,23 +133,42 @@ export default function Topnav() {
         <div className="flex-1" />
 
         <div className="flex items-center gap-4">
-          <div
-            className="flex items-center gap-2 font-mono text-[10px] text-ed-muted uppercase tracking-[0.12em]"
-            data-state={dotState}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${dotColor} ${running ? "animate-pulse" : ""}`}
-            />
-            {lastSyncLabel}
-          </div>
-          <button
-            onClick={onSync}
-            disabled={running}
-            className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-ed-md bg-ed-surface text-ed-text border border-ed-border text-[12px] font-medium hover:bg-ed-surface-2 hover:border-ed-border-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-ed-fast"
-          >
-            <Icon name="refresh" />
-            {running ? "syncing" : "sync"}
-          </button>
+          {user && (
+            <div
+              className="flex items-center gap-2 font-mono text-[10px] text-ed-muted uppercase tracking-[0.12em]"
+              data-state={dotState}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${dotColor} ${running ? "animate-pulse" : ""}`}
+              />
+              {lastSyncLabel}
+            </div>
+          )}
+          {user && (
+            <button
+              onClick={onSync}
+              disabled={running || user.is_demo}
+              title={user.is_demo ? "demo accounts cannot sync" : undefined}
+              className="inline-flex items-center gap-1.5 px-2.5 py-[5px] rounded-ed-md bg-ed-surface text-ed-text border border-ed-border text-[12px] font-medium hover:bg-ed-surface-2 hover:border-ed-border-2 disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-ed-fast"
+            >
+              <Icon name="refresh" />
+              {running ? "syncing" : "sync"}
+            </button>
+          )}
+          {user && (
+            <div className="flex items-center gap-2 pl-3 border-l border-ed-rule">
+              <span className="font-mono text-[10px] text-ed-muted uppercase tracking-[0.12em]">
+                {user.username}
+                {user.is_demo ? " · demo" : ""}
+              </span>
+              <button
+                onClick={() => logout()}
+                className="font-mono text-[10px] uppercase tracking-[0.12em] text-ed-muted hover:text-ed-text transition-colors duration-ed-fast"
+              >
+                logout
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

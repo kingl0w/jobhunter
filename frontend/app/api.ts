@@ -1,14 +1,57 @@
-import { Job, Resume, SearchTerm, SyncStatus, TailorResponse } from "./types";
+import {
+  Job,
+  Quota,
+  Resume,
+  SearchTerm,
+  SyncStatus,
+  TailorResponse,
+  User,
+} from "./types";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+export class AuthError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "AuthError";
+  }
+}
+
 async function request<T>(path: string, opts?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, opts);
+  const res = await fetch(`${BASE}${path}`, {
+    ...opts,
+    credentials: "include",
+  });
+  if (res.status === 401) {
+    const body = await res.text().catch(() => "");
+    throw new AuthError(body || "unauthorized");
+  }
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`${res.status}: ${body}`);
   }
+  if (res.status === 204) return undefined as T;
   return res.json();
+}
+
+export function login(app_password: string, username: string): Promise<{ user: User }> {
+  return request("/auth/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ app_password, username }),
+  });
+}
+
+export function logout(): Promise<{ status: string }> {
+  return request("/auth/logout", { method: "POST" });
+}
+
+export function whoami(): Promise<User> {
+  return request("/auth/me");
+}
+
+export function getQuota(): Promise<Quota> {
+  return request("/auth/quota");
 }
 
 export function fetchJobs(): Promise<Job[]> {
@@ -20,7 +63,7 @@ export function fetchJob(id: string): Promise<Job> {
 }
 
 export function triggerSync(): Promise<{ status: string }> {
-  return request("/sync?quick=true", { method: "POST" });
+  return request("/sync", { method: "POST" });
 }
 
 export function fetchSyncStatus(): Promise<SyncStatus> {

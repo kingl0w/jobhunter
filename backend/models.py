@@ -1,4 +1,5 @@
 import hashlib
+import uuid
 from datetime import datetime
 from typing import Optional
 
@@ -9,14 +10,48 @@ from sqlalchemy import (
     DateTime,
     Float,
     ForeignKey,
+    Index,
     Integer,
     JSON,
     String,
     Text,
+    UniqueConstraint,
 )
 from sqlalchemy.orm import relationship
 
 from database import Base
+
+
+def _new_uuid() -> str:
+    return uuid.uuid4().hex
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String, primary_key=True, default=_new_uuid)
+    username = Column(String, nullable=False, unique=True)
+    is_demo = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    resumes = relationship("Resume", back_populates="user", cascade="all, delete-orphan")
+    applications = relationship("Application", back_populates="user", cascade="all, delete-orphan")
+    llm_usage = relationship("LLMUsage", back_populates="user", cascade="all, delete-orphan")
+
+
+class LLMUsage(Base):
+    __tablename__ = "llm_usage"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
+    kind = Column(String, nullable=False)
+    used_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    user = relationship("User", back_populates="llm_usage")
+
+    __table_args__ = (
+        Index("ix_llm_usage_user_used_at", "user_id", "used_at"),
+    )
 
 
 class Job(Base):
@@ -45,7 +80,7 @@ class Job(Base):
         back_populates="job",
         cascade="all, delete-orphan",
     )
-    application = relationship("Application", back_populates="job", uselist=False)
+    applications = relationship("Application", back_populates="job", cascade="all, delete-orphan")
 
     @staticmethod
     def make_id(title: str, company: str, location: str | None) -> str:
@@ -60,21 +95,25 @@ class Resume(Base):
     __tablename__ = "resumes"
 
     id = Column(String, primary_key=True)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False)
     filename = Column(String, nullable=False)
     label = Column(String, nullable=False)
     file_path = Column(String, nullable=False)
     extracted_text = Column(Text, nullable=False, default="")
     uploaded_at = Column(DateTime, default=datetime.utcnow)
 
+    user = relationship("User", back_populates="resumes")
     resume_scores = relationship(
         "ResumeScore",
         back_populates="resume",
         cascade="all, delete-orphan",
     )
 
+    __table_args__ = (Index("ix_resumes_user_id", "user_id"),)
+
     @staticmethod
-    def make_id(filename: str) -> str:
-        return hashlib.sha256(filename.encode()).hexdigest()
+    def make_id(user_id: str, filename: str) -> str:
+        return hashlib.sha256(f"{user_id}|{filename}".encode()).hexdigest()
 
 
 class ResumeScore(Base):
@@ -111,13 +150,15 @@ class Application(Base):
     __tablename__ = "applications"
 
     job_id = Column(String, ForeignKey("jobs.id"), primary_key=True)
+    user_id = Column(String, ForeignKey("users.id"), primary_key=True)
     status = Column(String, nullable=False, default="saved")
     resume_used = Column(String, nullable=True)
     notes = Column(Text, nullable=True)
     applied_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    job = relationship("Job", back_populates="application")
+    job = relationship("Job", back_populates="applications")
+    user = relationship("User", back_populates="applications")
 
 
 class JobBase(BaseModel):
@@ -215,3 +256,20 @@ class ApplicationRead(ApplicationBase):
     updated_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class UserRead(BaseModel):
+    id: str
+    username: str
+    is_demo: bool
+
+    model_config = {"from_attributes": True}
+
+
+class LoginRequest(BaseModel):
+    app_password: str
+    username: str = Field(min_length=2, max_length=40, pattern=r"^[a-zA-Z0-9_-]+$")
+
+
+class LoginResponse(BaseModel):
+    user: UserRead
