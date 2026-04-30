@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { fetchJobs, fetchSyncStatus, getResumes } from "./api";
+import { fetchJobs, getResumes } from "./api";
 import JobCard from "./components/job-card";
 import Icon from "./components/icon-svg";
-import type { Job, Resume, SyncStatus } from "./types";
+import { useSync } from "./components/sync-context";
+import type { Job, Resume } from "./types";
 
 interface Filters {
   search: string;
@@ -46,22 +47,17 @@ const SELECT_CLASS =
   "appearance-none bg-ed-inset border border-ed-border rounded-ed-md px-3 pr-7 py-2 text-[13px] text-ed-text font-body focus:outline-none focus:border-ed-accent transition-colors duration-ed-fast";
 
 export default function Home() {
+  const { status: syncStatus, runId } = useSync();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [resumes, setResumes] = useState<Resume[]>([]);
-  const [syncStatus, setSyncStatus] = useState<SyncStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
 
   const load = useCallback(async () => {
     try {
-      const [jobList, status, resumeList] = await Promise.all([
-        fetchJobs(),
-        fetchSyncStatus(),
-        getResumes(),
-      ]);
+      const [jobList, resumeList] = await Promise.all([fetchJobs(), getResumes()]);
       setJobs(jobList);
-      setSyncStatus(status);
       setResumes(resumeList);
       setError(null);
     } catch (e) {
@@ -73,7 +69,7 @@ export default function Home() {
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, runId]);
 
   const filtered = useMemo<Job[]>(() => {
     let result = [...jobs];

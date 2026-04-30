@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AuthError, fetchSyncStatus, triggerSync } from "../api";
-import type { SyncStatus } from "../types";
+import { AuthError } from "../api";
 import { useAuth } from "./auth-context";
+import { useSync } from "./sync-context";
 import Icon from "./icon-svg";
 
 function fmtRelative(iso: string | null): string {
@@ -21,59 +20,15 @@ function fmtRelative(iso: string | null): string {
 export default function Topnav() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [status, setStatus] = useState<SyncStatus | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const stopPoll = useCallback(() => {
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  }, []);
-
-  const startPoll = useCallback(() => {
-    if (pollRef.current) return;
-    pollRef.current = setInterval(async () => {
-      try {
-        const s = await fetchSyncStatus();
-        setStatus(s);
-        if (s.status !== "running") stopPoll();
-      } catch {
-        stopPoll();
-      }
-    }, 3000);
-  }, [stopPoll]);
-
-  useEffect(() => {
-    if (!user) {
-      setStatus(null);
-      stopPoll();
-      return;
-    }
-    let cancelled = false;
-    fetchSyncStatus()
-      .then((s) => {
-        if (cancelled) return;
-        setStatus(s);
-        if (s.status === "running") startPoll();
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-      stopPoll();
-    };
-  }, [user, startPoll, stopPoll]);
+  const { status, triggerSync } = useSync();
 
   const onSync = async () => {
     if (status?.status === "running") return;
     try {
       await triggerSync();
-      const s = await fetchSyncStatus();
-      setStatus(s);
-      startPoll();
     } catch (e) {
       if (e instanceof AuthError) {
-        // auth-context will redirect to /login on next render via 401
+        // auth-context handles 401 redirect
       }
     }
   };

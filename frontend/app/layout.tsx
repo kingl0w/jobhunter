@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { fraunces, inter, jetbrainsMono } from "./lib/fonts";
 import { AuthProvider } from "./components/auth-context";
 import AuthGate from "./components/auth-gate";
+import { SyncProvider } from "./components/sync-context";
 import Topnav from "./components/topnav";
 import { ToastStack } from "./components/toast";
 import "./globals.css";
@@ -22,9 +23,11 @@ export default function RootLayout({
         className={`${fraunces.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased`}
       >
         <AuthProvider>
-          <Topnav />
-          <AuthGate>{children}</AuthGate>
-          <ToastStack />
+          <SyncProvider>
+            <Topnav />
+            <AuthGate>{children}</AuthGate>
+            <ToastStack />
+          </SyncProvider>
         </AuthProvider>
       </body>
     </html>

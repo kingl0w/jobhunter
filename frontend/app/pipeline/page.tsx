@@ -9,6 +9,7 @@ import {
   Job,
 } from "../types";
 import ScoreRing from "../components/score-ring";
+import { useSync } from "../components/sync-context";
 import { useToast } from "../components/toast";
 
 const COLS = APPLICATION_STATUSES;
@@ -37,6 +38,7 @@ function fmtRelative(iso: string | null): string {
 
 export default function PipelinePage() {
   const { push } = useToast();
+  const { runId } = useSync();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -56,7 +58,7 @@ export default function PipelinePage() {
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, runId]);
 
   const grouped = useMemo<Record<string, Job[]>>(() => {
     const g: Record<string, Job[]> = Object.fromEntries(
