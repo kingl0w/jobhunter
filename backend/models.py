@@ -31,7 +31,10 @@ class User(Base):
 
     id = Column(String, primary_key=True, default=_new_uuid)
     username = Column(String, nullable=False, unique=True)
+    email = Column(String, nullable=True)
     is_demo = Column(Boolean, nullable=False, default=False)
+    digest_enabled = Column(Boolean, nullable=False, default=True)
+    last_digest_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     resumes = relationship("Resume", back_populates="user", cascade="all, delete-orphan")
@@ -261,9 +264,16 @@ class ApplicationRead(ApplicationBase):
 class UserRead(BaseModel):
     id: str
     username: str
+    email: str | None = None
     is_demo: bool
+    digest_enabled: bool = True
 
     model_config = {"from_attributes": True}
+
+
+class UserUpdate(BaseModel):
+    email: str | None = None
+    digest_enabled: bool | None = None
 
 
 class LoginRequest(BaseModel):

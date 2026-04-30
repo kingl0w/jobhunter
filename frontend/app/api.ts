@@ -1,5 +1,6 @@
 import {
   Job,
+  PublicConfig,
   Quota,
   Resume,
   SearchTerm,
@@ -42,12 +43,28 @@ export function login(app_password: string, username: string): Promise<{ user: U
   });
 }
 
+export function loginAsDemo(): Promise<{ user: User }> {
+  return request("/auth/demo", { method: "POST" });
+}
+
 export function logout(): Promise<{ status: string }> {
   return request("/auth/logout", { method: "POST" });
 }
 
 export function whoami(): Promise<User> {
   return request("/auth/me");
+}
+
+export function updateMe(body: { email?: string | null; digest_enabled?: boolean }): Promise<User> {
+  return request("/auth/me", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+}
+
+export function getPublicConfig(): Promise<PublicConfig> {
+  return request("/config");
 }
 
 export function getQuota(): Promise<Quota> {

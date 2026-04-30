@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { fetchJobs, fetchSyncStatus, getResumes } from "./api";
 import JobCard from "./components/job-card";
@@ -145,6 +146,26 @@ export default function Home() {
 
   return (
     <main className="max-w-[1440px] mx-auto px-8 py-8 w-full">
+      {!loading && resumes.length === 0 && (
+        <div className="mb-7 p-4 rounded-ed-md border border-ed-accent/40 bg-ed-accent-15 flex items-center gap-4">
+          <Icon name="upload" />
+          <div className="flex-1 min-w-0">
+            <div className="font-display italic font-semibold text-[16px] text-ed-text">
+              upload a resume to start matching
+            </div>
+            <p className="font-mono text-[11px] text-ed-muted m-0 tracking-[0.04em]">
+              jobs are scored against your resumes — without one, every match is 0.
+            </p>
+          </div>
+          <Link
+            href="/settings"
+            className="inline-flex items-center gap-2 px-3.5 py-2 rounded-ed-md bg-ed-accent text-ed-on-accent font-body text-[13px] font-semibold hover:bg-ed-accent-glow transition-colors duration-ed-fast"
+          >
+            go to settings
+          </Link>
+        </div>
+      )}
+
       <div className="flex items-end justify-between gap-6 flex-wrap mb-7 pb-4 border-b border-ed-rule">
         <div>
           <h1 className="font-display italic font-bold text-[44px] tracking-[-0.035em] m-0 mb-1.5 text-ed-text leading-none">

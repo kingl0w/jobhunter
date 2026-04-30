@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { login } from "../api";
+import { getPublicConfig, login, loginAsDemo } from "../api";
 import { useAuth } from "../components/auth-context";
 
 export default function LoginPage() {
@@ -12,6 +12,13 @@ export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [demoEnabled, setDemoEnabled] = useState(false);
+
+  useEffect(() => {
+    getPublicConfig()
+      .then((c) => setDemoEnabled(c.demo_enabled))
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -23,6 +30,20 @@ export default function LoginPage() {
       router.replace("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "login failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDemo = async () => {
+    setError(null);
+    setSubmitting(true);
+    try {
+      await loginAsDemo();
+      await refresh();
+      router.replace("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "demo login failed");
     } finally {
       setSubmitting(false);
     }
@@ -96,6 +117,17 @@ export default function LoginPage() {
         >
           {submitting ? "signing in…" : "sign in"}
         </button>
+
+        {demoEnabled && (
+          <button
+            type="button"
+            onClick={handleDemo}
+            disabled={submitting}
+            className="inline-flex items-center justify-center gap-2 w-full px-4 py-2 rounded-ed-md bg-ed-surface-2 text-ed-text border border-ed-border font-body text-[12px] hover:bg-ed-border transition-colors duration-ed-fast"
+          >
+            try the demo (read-only)
+          </button>
+        )}
 
         <p className="font-mono text-[10px] text-ed-muted tracking-[0.04em]">
           new username? a profile is created automatically on first sign-in.

@@ -8,9 +8,11 @@ import {
   getResumes,
   getSearchTerms,
   toggleSearchTerm,
+  updateMe,
   uploadResume,
 } from "../api";
 import type { Resume, SearchTerm } from "../types";
+import { useAuth } from "../components/auth-context";
 import Icon from "../components/icon-svg";
 import { useToast } from "../components/toast";
 
@@ -24,7 +26,7 @@ const EXAMPLES = [
   "site reliability engineer",
 ];
 
-type Section = "resumes" | "terms" | "integrations";
+type Section = "account" | "resumes" | "terms" | "integrations";
 
 interface IntegrationRow {
   id: string;
@@ -72,7 +74,30 @@ function formatDate(dateStr: string): string {
 
 export default function SettingsPage() {
   const { push } = useToast();
-  const [section, setSection] = useState<Section>("resumes");
+  const { user, refresh } = useAuth();
+  const [section, setSection] = useState<Section>("account");
+  const [email, setEmail] = useState(user?.email ?? "");
+  const [digestEnabled, setDigestEnabled] = useState(user?.digest_enabled ?? true);
+  const [savingPrefs, setSavingPrefs] = useState(false);
+
+  useEffect(() => {
+    setEmail(user?.email ?? "");
+    setDigestEnabled(user?.digest_enabled ?? true);
+  }, [user]);
+
+  const handleSavePrefs = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingPrefs(true);
+    try {
+      await updateMe({ email: email.trim() || null, digest_enabled: digestEnabled });
+      await refresh();
+      push("preferences saved");
+    } catch (err) {
+      push(err instanceof Error ? err.message : "save failed", "error");
+    } finally {
+      setSavingPrefs(false);
+    }
+  };
 
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [terms, setTerms] = useState<SearchTerm[]>([]);
@@ -204,6 +229,23 @@ export default function SettingsPage() {
     const active = section === s;
     const iconName: "briefcase" | "search" | "settings" =
       s === "resumes" ? "briefcase" : s === "terms" ? "search" : "settings";
+    if (s === "account") {
+      return (
+        <button
+          type="button"
+          onClick={() => setSection(s)}
+          aria-current={active ? "page" : undefined}
+          className={`w-full flex items-center gap-3 px-3 py-2 rounded-ed-md text-left transition-colors duration-ed-fast ${
+            active
+              ? "bg-ed-accent-15 text-ed-accent"
+              : "text-ed-muted hover:bg-ed-surface hover:text-ed-text"
+          }`}
+        >
+          <Icon name="settings" />
+          <span className="font-body text-[13px] flex-1">{label}</span>
+        </button>
+      );
+    }
     return (
       <button
         type="button"
@@ -248,12 +290,74 @@ export default function SettingsPage() {
           className="md:sticky md:top-24 md:self-start flex flex-col gap-1"
           aria-label="Settings sections"
         >
+          {navItem("account", "account")}
           {navItem("resumes", "resumes", resumes.length)}
           {navItem("terms", "search terms", terms.length)}
           {navItem("integrations", "integrations", INTEGRATIONS.length)}
         </nav>
 
         <div className="min-w-0">
+          {section === "account" && (
+            <section>
+              <div className="mb-6">
+                <h2 className="font-display italic font-semibold text-[24px] tracking-[-0.025em] text-ed-text m-0 mb-1">
+                  account
+                </h2>
+                <p className="font-mono text-[11px] text-ed-muted m-0 tracking-[0.04em]">
+                  signed in as <span className="text-ed-text">{user?.username}</span>
+                  {user?.is_demo ? " · demo (read-only)" : ""}
+                </p>
+              </div>
+
+              <form
+                onSubmit={handleSavePrefs}
+                className="p-5 bg-ed-surface border border-ed-border rounded-ed-md space-y-4 max-w-[480px]"
+              >
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-ed-muted mb-1.5"
+                  >
+                    email (for daily digest)
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    disabled={user?.is_demo}
+                    placeholder="you@example.com"
+                    className="w-full bg-ed-inset border border-ed-border rounded-ed-md px-3 py-2 text-[13px] text-ed-text placeholder:text-ed-dim font-body focus:outline-none focus:border-ed-accent transition-colors duration-ed-fast disabled:opacity-50"
+                  />
+                  <p className="font-mono text-[10px] text-ed-muted tracking-[0.04em] mt-1.5">
+                    digests are sent only when the server has SMTP configured.
+                  </p>
+                </div>
+
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={digestEnabled}
+                    onChange={(e) => setDigestEnabled(e.target.checked)}
+                    disabled={user?.is_demo}
+                    className="w-3.5 h-3.5 accent-ed-accent"
+                  />
+                  <span className="font-mono text-[11px] text-ed-text tracking-[0.04em]">
+                    receive daily digest emails
+                  </span>
+                </label>
+
+                <button
+                  type="submit"
+                  disabled={savingPrefs || user?.is_demo}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-ed-md bg-ed-accent text-ed-on-accent font-body text-[13px] font-semibold hover:bg-ed-accent-glow disabled:opacity-40 disabled:cursor-not-allowed transition-colors duration-ed-fast"
+                >
+                  {savingPrefs ? "saving…" : "save preferences"}
+                </button>
+              </form>
+            </section>
+          )}
+
           {section === "resumes" && (
             <section>
               <div className="mb-6">

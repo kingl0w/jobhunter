@@ -54,7 +54,8 @@ def init_db() -> None:
 
 
 def _migrate_existing_schema() -> None:
-    """Idempotent in-place migration: adds user_id to legacy resumes/applications.
+    """Idempotent in-place migration: adds user_id to legacy resumes/applications,
+    and email/digest columns to users.
 
     On first boot after upgrade, creates a bootstrap user and assigns any pre-existing
     resume / application rows to it. SQLite ALTER TABLE limitations mean Application's
@@ -63,6 +64,17 @@ def _migrate_existing_schema() -> None:
     from models import User
 
     inspector = inspect(engine)
+
+    if "users" in inspector.get_table_names():
+        user_cols = {c["name"] for c in inspector.get_columns("users")}
+        with engine.begin() as conn:
+            if "email" not in user_cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN email VARCHAR"))
+            if "digest_enabled" not in user_cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN digest_enabled BOOLEAN DEFAULT 1 NOT NULL"))
+            if "last_digest_at" not in user_cols:
+                conn.execute(text("ALTER TABLE users ADD COLUMN last_digest_at DATETIME"))
+
     if "resumes" not in inspector.get_table_names():
         return
 

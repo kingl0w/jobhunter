@@ -78,7 +78,14 @@ export interface TailorResponse {
 export interface User {
   id: string;
   username: string;
+  email?: string | null;
   is_demo: boolean;
+  digest_enabled?: boolean;
+}
+
+export interface PublicConfig {
+  demo_enabled: boolean;
+  version: string;
 }
 
 export interface Quota {

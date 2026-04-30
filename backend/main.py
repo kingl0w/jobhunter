@@ -69,6 +69,7 @@ from models import (
     SearchTermUpdate,
     User,
     UserRead,
+    UserUpdate,
 )
 from scheduler import start_scheduler, stop_scheduler
 from scorer import load_resume_text, rescore_all_for_resume, score_all_unscored
@@ -119,8 +120,15 @@ async def lifespan(application: FastAPI):
         log.warning(
             "SESSION_SECRET is the default. Set a real value before deploying."
         )
+    if settings.demo_mode:
+        db = SessionLocal()
+        try:
+            from auth import get_or_create_user as _gocu
+            _gocu(db, "demo", is_demo=True)
+        finally:
+            db.close()
     start_scheduler(settings.sync_interval_hours)
-    log.info("app started (cors_origins=%s)", settings.cors_origin_list)
+    log.info("app started (cors_origins=%s, demo_mode=%s)", settings.cors_origin_list, settings.demo_mode)
     yield
     stop_scheduler()
 
@@ -252,6 +260,14 @@ def healthcheck():
     return {"status": "ok", "version": app.version}
 
 
+@app.get("/config")
+def public_config():
+    return {
+        "demo_enabled": settings.demo_mode,
+        "version": app.version,
+    }
+
+
 @app.post("/auth/login", response_model=LoginResponse)
 def login(body: LoginRequest, response: Response, db: Session = Depends(get_db)):
     if not verify_app_password(body.app_password):
@@ -261,10 +277,39 @@ def login(body: LoginRequest, response: Response, db: Session = Depends(get_db))
     return LoginResponse(user=UserRead.model_validate(user))
 
 
+@app.post("/auth/demo", response_model=LoginResponse)
+def demo_login(response: Response, db: Session = Depends(get_db)):
+    if not settings.demo_mode:
+        raise HTTPException(status_code=404, detail="demo mode not enabled")
+    user = get_or_create_user(db, "demo", is_demo=True)
+    issue_session_cookie(response, user.id)
+    return LoginResponse(user=UserRead.model_validate(user))
+
+
 @app.post("/auth/logout")
 def logout(response: Response):
     clear_session_cookie(response)
     return {"status": "ok"}
+
+
+@app.patch("/auth/me", response_model=UserRead)
+def update_me(
+    body: UserUpdate,
+    db: Session = Depends(get_db),
+    user: User = Depends(current_user),
+):
+    if user.is_demo:
+        raise HTTPException(403, "demo accounts cannot edit profile")
+    if body.email is not None:
+        email = body.email.strip()
+        if email and "@" not in email:
+            raise HTTPException(422, "invalid email")
+        user.email = email or None
+    if body.digest_enabled is not None:
+        user.digest_enabled = body.digest_enabled
+    db.commit()
+    db.refresh(user)
+    return UserRead.model_validate(user)
 
 
 @app.get("/auth/me", response_model=UserRead)
