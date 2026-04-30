@@ -14,4 +14,4 @@ python-dotenv
 httpx
 itsdangerous
 pytest
-httpx-sse
+sentry-sdk

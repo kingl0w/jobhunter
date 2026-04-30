@@ -1,7 +1,9 @@
 import logging
 
 from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.cron import CronTrigger
 
+from backups import run_backup
 from database import SessionLocal
 from fetcher import run_full_sync
 from scorer import score_all_unscored
@@ -25,6 +27,13 @@ def _run_scheduled_sync():
         db.close()
 
 
+def _run_scheduled_backup():
+    try:
+        run_backup()
+    except Exception:
+        log.exception("scheduled backup failed")
+
+
 def start_scheduler(interval_hours: int) -> None:
     scheduler.add_job(
         _run_scheduled_sync,
@@ -33,8 +42,14 @@ def start_scheduler(interval_hours: int) -> None:
         id="full_sync",
         replace_existing=True,
     )
+    scheduler.add_job(
+        _run_scheduled_backup,
+        CronTrigger(hour=3, minute=0),
+        id="daily_backup",
+        replace_existing=True,
+    )
     scheduler.start()
-    log.info("scheduler started, interval=%dh", interval_hours)
+    log.info("scheduler started: sync interval=%dh, backup daily 03:00 UTC", interval_hours)
 
 
 def stop_scheduler() -> None:
