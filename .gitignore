@@ -1,7 +1,3 @@
-# Argos
-argos/.initialized
-.argos/
-
 # Python
 __pycache__/
 *.py[cod]
@@ -10,6 +6,7 @@ dist/
 build/
 venv/
 .venv/
+.pytest_cache/
 # Node / Next.js
 node_modules/
 frontend/.next/
@@ -35,10 +32,7 @@ resumes/tailored/*.docx
 resumes/*.docx
 resumes/uploads/*
 !resumes/uploads/.gitkeep
-# Claude Code — agents and commands are Argos-managed and MUST be committed
-# Only ignore personal/runtime files inside .claude/
-!.claude/agents/
-!.claude/commands/
+# Claude Code — runtime/personal files only; everything committed otherwise
 .claude/settings.local.json
 .claude/*.log
 # WSL/NTFS metadata
