@@ -1,0 +1,21 @@
+{
+	# Replace with your email for Let's Encrypt notifications.
+	email you@example.com
+}
+
+# Replace jobhunter.example.com with your domain.
+# When you do, Caddy will automatically issue a free TLS cert via Let's Encrypt.
+# For local-only testing, use http:// localhost instead and remove the email block.
+jobhunter.example.com {
+	encode zstd gzip
+
+	@api path /api/*
+	handle @api {
+		uri strip_prefix /api
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+}
